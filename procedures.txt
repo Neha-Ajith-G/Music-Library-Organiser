@@ -47,3 +47,105 @@ CALL SearchSongsByAlbumName("Freudian");
 
 
 -- Delete Song
+
+DELIMITER //
+
+CREATE PROCEDURE DeleteSong(
+    IN SongID INT
+)
+BEGIN
+    DELETE FROM Song
+    WHERE Song_ID = SongID;
+END//
+
+DELIMITER ;
+
+
+-- Add
+DELIMITER //
+
+CREATE PROCEDURE AddArtist(
+    IN ArtistID INT,
+    IN ArtistName VARCHAR(25)
+)
+BEGIN
+    INSERT INTO Artist(Artist_ID, Artist_Name)
+    VALUES (ArtistID, ArtistName);
+END//
+
+DELIMITER ;
+
+DELIMITER //
+
+CREATE PROCEDURE AddAlbum(
+    IN AlbumID INT,
+    IN AlbumName VARCHAR(100),
+    IN ReleaseYear INT
+)
+BEGIN
+    INSERT INTO Album(Album_ID, Album_Name, Year)
+    VALUES (AlbumID, AlbumName, ReleaseYear);
+END//
+
+DELIMITER ;
+
+
+DELIMITER //
+
+CREATE PROCEDURE AddSong(
+    IN SongID INT,
+    IN SongName VARCHAR(50),
+    IN AlbumID INT,
+    IN Genre VARCHAR(50),
+    IN Duration VARCHAR(10)
+)
+BEGIN
+    INSERT INTO Song(Song_ID, Song_name, Album_ID, Genre, Duration)
+    VALUES (SongID, SongName, AlbumID, Genre, Duration);
+END//
+
+DELIMITER ;
+
+
+DELIMITER //
+
+CREATE PROCEDURE InsertNewSong(
+    IN SongID INT,
+    IN SongName VARCHAR(50),
+    IN AlbumName VARCHAR(100),
+    IN Genre VARCHAR(50),
+    IN Duration VARCHAR(10)
+)
+BEGIN
+    DECLARE AlbumID INT;
+    DECLARE ArtistID INT;
+
+    -- Checks if the album exists
+    SELECT Album_ID INTO AlbumID
+    FROM Album
+    WHERE Album_Name = AlbumName;
+
+    -- If the album doesn't exist, raise an error
+    IF AlbumID IS NULL THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Album does not exist';
+    END IF;
+
+    -- Check if the artist exists for the given album
+    SELECT Artist_ID INTO ArtistID
+    FROM AlbArt_ref
+    WHERE Album_ID = AlbumID
+    LIMIT 1;
+
+    -- If the artist doesn't exist for the given album, raise an error
+    IF ArtistID IS NULL THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Artist does not exist for the specified album';
+    END IF;
+
+    -- Insert the song record
+    INSERT INTO Song(Song_ID, Song_name, Album_ID, Genre, Duration)
+    VALUES (SongID, SongName, AlbumID, Genre, Duration);
+END//
+
+DELIMITER ;
