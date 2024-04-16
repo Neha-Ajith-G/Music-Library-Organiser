@@ -115,21 +115,4 @@ select distinct(Song_name, Artist_Name) from Song join AlbArt_ref on Song.Song_I
    select distinct(Song_name) from Song join AlbArt_ref on Song.Song_ID =     AlbArt_ref.Song_ID join Artist on AlbArt_r
    ef.Artist_ID = Artist.Artist_ID where Song.Album_ID = 102;
 
-   +---------------------------------+
-| Song_name                       |
-+---------------------------------+
-| Get You                         |
-| Best Part                       |
-| Hold Me Down                    |
-| Neu Roses (Transgressor's Song) |
-| Loose                           |
-| We find love                    |
-| Blessed                         |
-| Take Me Away                    |
-| Transform                       |
-| Freudian                        |
-
-
-   distinctil only one attribute koduthu
-
 -- EOF
