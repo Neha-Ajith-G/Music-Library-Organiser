@@ -90,22 +90,6 @@ END//
 DELIMITER ;
 
 
-DELIMITER //
-
-CREATE PROCEDURE AddSong(
-    IN SongID INT,
-    IN SongName VARCHAR(50),
-    IN AlbumID INT,
-    IN Genre VARCHAR(50),
-    IN Duration VARCHAR(10)
-)
-BEGIN
-    INSERT INTO Song(Song_ID, Song_name, Album_ID, Genre, Duration)
-    VALUES (SongID, SongName, AlbumID, Genre, Duration);
-END//
-
-DELIMITER ;
-
 
 DELIMITER //
 
@@ -134,8 +118,7 @@ BEGIN
     -- Check if the artist exists for the given album
     SELECT Artist_ID INTO ArtistID
     FROM AlbArt_ref
-    WHERE Album_ID = AlbumID
-    LIMIT 1;
+    WHERE Album_ID = AlbumID;
 
     -- If the artist doesn't exist for the given album, raise an error
     IF ArtistID IS NULL THEN
@@ -149,3 +132,5 @@ BEGIN
 END//
 
 DELIMITER ;
+
+
