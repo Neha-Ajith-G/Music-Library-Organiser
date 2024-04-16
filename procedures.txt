@@ -1,0 +1,49 @@
+--search and retrieval procedures
+
+DELIMITER //
+CREATE PROCEDURE SearchSongsByArtistName(
+    IN ArtistName VARCHAR(100)
+)
+BEGIN
+    SELECT s.Song_ID, s.Song_name, a.Album_Name, s.Genre, s.Duration
+    FROM Song s
+    INNER JOIN Album a ON s.Album_ID = a.Album_ID
+    INNER JOIN AlbArt_ref aa ON s.Song_ID = aa.Song_ID
+    INNER JOIN Artist ar ON aa.Artist_ID = ar.Artist_ID
+    WHERE ar.Artist_Name = ArtistName;
+END//
+DELIMITER ;
+CALL SearchSongsByArtistName("KJ Yesudas");
+
+DELIMITER //
+
+CREATE PROCEDURE SearchSongsByGenre(
+    IN GenreName VARCHAR(50)
+)
+BEGIN
+    SELECT s.Song_ID, s.Song_name, a.Album_Name, s.Genre, s.Duration
+    FROM Song s
+    INNER JOIN Album a ON s.Album_ID = a.Album_ID
+    WHERE s.Genre = GenreName;
+END//
+
+DELIMITER ;
+
+CALL SearchSongsByGenre("R&B/Soul");
+
+DELIMITER //
+CREATE PROCEDURE SearchSongsByAlbumName(
+    IN AlbumName VARCHAR(100)
+)
+BEGIN
+    SELECT s.Song_ID, s.Song_name, s.Genre, s.Duration FROM Song s 
+    INNER JOIN Album a ON s.Album_ID = a.Album_ID
+    WHERE a.Album_Name = AlbumName;
+END//
+
+DELIMITER ;
+
+CALL SearchSongsByAlbumName("Freudian");
+
+
+-- Delete Song
