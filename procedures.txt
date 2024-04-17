@@ -91,10 +91,14 @@ DELIMITER ;
 
 
 
-DELIMITER //
 
-CREATE PROCEDURE InsertNewSong(
+DROP procedure IF EXISTS InsertNewSong;
+
+DELIMITER $$
+
+CREATE DEFINER=root@localhost PROCEDURE InsertNewSong(
     IN SongID INT,
+    IN ArtistID INT,
     IN SongName VARCHAR(50),
     IN AlbumName VARCHAR(100),
     IN Genre VARCHAR(50),
@@ -102,35 +106,36 @@ CREATE PROCEDURE InsertNewSong(
 )
 BEGIN
     DECLARE AlbumID INT;
-    DECLARE ArtistID INT;
-
-    -- Checks if the album exists
+    DECLARE ArtistID_Check INT;
+ 
     SELECT Album_ID INTO AlbumID
     FROM Album
     WHERE Album_Name = AlbumName;
 
-    -- If the album doesn't exist, raise an error
+    SELECT Artist_ID INTO ArtistID_Check
+    FROM Artist
+    WHERE Artist_ID = ArtistID;
+
     IF AlbumID IS NULL THEN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Album does not exist';
+
+    ELSE
+
+        IF ArtistID_Check IS NULL THEN
+            SIGNAL SQLSTATE '46000'
+            SET MESSAGE_TEXT = 'Artist does not exist';
+
+        ELSE
+	    INSERT INTO Song(Song_ID, Song_name, Album_ID, Genre, Duration)
+	    VALUES (SongID, SongName, AlbumID, Genre, Duration);
+    
+	    INSERT INTO AlbArt_ref(Artist_ID, Album_ID, Song_ID)
+	    VALUES (ArtistID_Check, AlbumID, SongID);
+
+        END IF;
     END IF;
 
-    -- Check if the artist exists for the given album
-    SELECT Artist_ID INTO ArtistID
-    FROM AlbArt_ref
-    WHERE Album_ID = AlbumID;
+END$$
 
-    -- If the artist doesn't exist for the given album, raise an error
-    IF ArtistID IS NULL THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Artist does not exist for the specified album';
-    END IF;
-
-    -- Insert the song record
-    INSERT INTO Song(Song_ID, Song_name, Album_ID, Genre, Duration)
-    VALUES (SongID, SongName, AlbumID, Genre, Duration);
-END//
-
-DELIMITER ;
-
-
+DELIMITER ;
