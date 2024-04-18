@@ -81,7 +81,7 @@ insert into AlbArt_ref values(9, 104, 1024);
 
 -- 1. Referential integrity constraint, deleting tuple value from artist table.
 
-
+DROP TRIGGER IF EXISTS Artist_deletion;
 DELIMITER //
 
 create trigger Artist_deletion
@@ -93,8 +93,7 @@ select count(*) into artist_count from AlbArt_ref where Artist_ID=old.Artist_ID;
 if artist_count>0 then
 signal sqlstate '45000' set message_text = 'Referential integrity constraint violated, cannot delete artist with associated song.';  
 end if;
-end;
-//
+end //
 
 DELIMITER ;
 
@@ -199,9 +198,20 @@ CREATE PROCEDURE SearchSongsByAlbumName(
     IN AlbumName VARCHAR(100)
 )
 BEGIN
-    SELECT s.Song_ID, s.Song_name, s.Genre, s.Duration FROM Song s 
-    INNER JOIN Album a ON s.Album_ID = a.Album_ID
-    WHERE a.Album_Name = AlbumName;
+    DECLARE AlbumCheck VARCHAR(50);
+
+    SELECT Album_Name INTO AlbumCheck
+    FROM Album WHERE Album_Name = AlbumName LIMIT 1;
+
+    IF AlbumCheck IS NOT NULL
+    THEN
+        SELECT s.Song_ID, s.Song_name, s.Genre, s.Duration FROM Song s 
+        INNER JOIN Album a ON s.Album_ID = a.Album_ID
+        WHERE a.Album_Name = AlbumName;
+    ELSE
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Album does not exist';
+    END IF;
 END//
 
 DELIMITER ;
@@ -219,19 +229,32 @@ CREATE PROCEDURE SearchSongsByArtistName(
     IN ArtistName VARCHAR(100)
 )
 BEGIN
-    SELECT s.Song_ID, s.Song_name, a.Album_Name, s.Genre, s.Duration
-    FROM Song s
-    INNER JOIN Album a ON s.Album_ID = a.Album_ID
-    INNER JOIN AlbArt_ref aa ON s.Song_ID = aa.Song_ID
-    INNER JOIN Artist ar ON aa.Artist_ID = ar.Artist_ID
-    WHERE ar.Artist_Name = ArtistName;
+    DECLARE ArtistCheck VARCHAR(50);
+
+    SELECT Artist_Name INTO ArtistCheck
+    FROM Artist WHERE Artist_Name = ArtistName LIMIT 1;
+
+    IF ArtistCheck IS NOT NULL
+    THEN
+        SELECT s.Song_ID, s.Song_name, a.Album_Name, s.Genre, s.Duration
+        FROM Song s
+        INNER JOIN Album a ON s.Album_ID = a.Album_ID
+        INNER JOIN AlbArt_ref aa ON s.Song_ID = aa.Song_ID
+        INNER JOIN Artist ar ON aa.Artist_ID = ar.Artist_ID
+        WHERE ar.Artist_Name = ArtistName;
+
+    ELSE
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Artist does not exist';
+    END IF;
+
 END//
 
 DELIMITER ;
 
 CALL SearchSongsByArtistName("KJ Yesudas");
 
--- 4. Search songs by Album
+-- 4. Search songs by Genre
 
 drop procedure if exists SearchSongsByGenre;
 
@@ -241,10 +264,22 @@ CREATE PROCEDURE SearchSongsByGenre(
     IN GenreName VARCHAR(50)
 )
 BEGIN
-    SELECT s.Song_ID, s.Song_name, a.Album_Name, s.Genre, s.Duration
-    FROM Song s
-    INNER JOIN Album a ON s.Album_ID = a.Album_ID
-    WHERE s.Genre = GenreName;
+    DECLARE GenreCheck VARCHAR(50);
+
+    SELECT Genre INTO GenreCheck 
+    FROM Song WHERE Genre = GenreName LIMIT 1;
+
+    IF GenreCheck IS NOT NULL
+    THEN
+        SELECT s.Song_ID, s.Song_name, a.Album_Name, s.Genre, s.Duration
+        FROM Song s
+        INNER JOIN Album a ON s.Album_ID = a.Album_ID
+        WHERE s.Genre = GenreName;
+    
+    ELSE
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Genre does not exist';
+    END IF;
 END//
 
 DELIMITER ;
@@ -257,7 +292,7 @@ DROP procedure IF EXISTS InsertNewSong;
 
 DELIMITER $$
 
-CREATE DEFINER=root@localhost PROCEDURE InsertNewSong(
+CREATE PROCEDURE InsertNewSong(
     IN SongID INT,
     IN ArtistID INT,
     IN SongName VARCHAR(50),
@@ -296,17 +331,23 @@ BEGIN
 
         END IF;
     END IF;
+END $$
 
-END$$
-
-DELIMITER ;
-
+DELIMITER ;
 CALL InsertNewSong(1023, 11, "Periyone", "The Goat Life - Aadujeevitham", "Indian Film Pop", "5:25");
 
 -- STAT
 -- 4 Tables
+--    Artist
+--    Album
+--    Song
+--    AlbArt_ref
+
 -- 2 Views
+--   Indian_pop_playlist
+--   R&B_Playlist
 -- 1 Trigger
+--    Artist_Deletion
 -- 5 Procedures
 
 -- EOF
