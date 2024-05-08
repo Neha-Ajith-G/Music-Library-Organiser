@@ -185,9 +185,10 @@ end if;
 end //
 
 DELIMITER ;
-
+select * from Song;
 call BulkAlb();
 
+select * from Song;
 -- 2. Search songs from given Album
 
 drop procedure if exists SearchSongsByAlbumName;
